@@ -15,6 +15,8 @@ from . import CLAIM_GENERATOR_NAME, __version__
 from .keys import KeystoreKeyBackend
 
 JPEG_SUFFIXES = {".jpg", ".jpeg"}
+# Zeitstempeldienst von SSL.com, steht auf der C2PA-TSA-Trust-List.
+DEFAULT_TSA_URL = "https://ts-c2pa.ssl.com"
 
 
 @dataclass

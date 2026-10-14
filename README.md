@@ -49,6 +49,22 @@ verwalten, z. B. für die Rotation. Nach einem Import wird die PEM-Datei nicht m
 gebraucht. Unter Windows passen nur EC-Schlüssel (P-256/P-384) in die
 Anmeldeinformationsverwaltung.
 
+## Zeitstempel (TSA)
+
+Mit `--tsa-url` holt `sign` einen RFC-3161-Zeitstempel und bettet ihn in die
+Signatur ein. Dann bleibt die Signatur auch nach Ablauf des Zertifikats prüfbar.
+Getestet ist der Zeitstempeldienst von SSL.com, der auf der
+[C2PA-TSA-Trust-List](https://github.com/c2pa-org/conformance-public/blob/main/trust-list/C2PA-TSA-TRUST-LIST.pem) steht:
+
+```bash
+c2pa-signer sign ./bilder -r --cert certs/signer-chain.pem -o ./signiert --tsa-url https://ts-c2pa.ssl.com
+```
+
+Ohne `--tsa-url` wird kein Zeitstempel geholt. SSL.com beschreibt den Dienst als
+Teil seiner C2PA-Zertifikatspakete mit API-Zugang; für den Produktivbetrieb die
+Nutzungsbedingungen klären. Die CI prüft unter Linux, dass der Zeitstempel gültig
+ist und gegen die C2PA-TSA-Trust-List als vertrauenswürdig gilt (`tests/test_tsa.py`).
+
 ## Befehle
 
 | Befehl | Zweck |

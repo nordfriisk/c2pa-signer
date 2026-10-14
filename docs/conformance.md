@@ -47,7 +47,7 @@ unter der offiziellen C2PA Trust List.
 | Schlüssel im Speicher nur zum Signieren entschlüsselt, oder Key-Management-Komponente (Linux Keyring, macOS Keychain) | umgesetzt: `c2pa-keystore` + `--keystore` (Windows Credential Manager, macOS Keychain, Linux Secret Service) |
 | Least Privilege, zeitlich begrenzter Zugriff auf den Schlüssel | offen: im Security-Dokument beschreiben, ggf. über OS-Keystore lösen |
 | Schlüsselrotation unterstützen | möglich: Schlüssel/Zertifikat sind Parameter; Prozess dokumentieren |
-| SCA/SBOM-Scan gegen NVD, CRITICAL/HIGH in 90 Tagen beheben, Release-Pipeline blockiert | teilweise: `pip-audit` in CI; SBOM-Erzeugung und Release-Gate fehlen noch |
+| SCA/SBOM-Scan gegen NVD, CRITICAL/HIGH in 90 Tagen beheben, Release-Pipeline blockiert | teilweise: `pip-audit` in CI, SBOM (CycloneDX 1.6) je Plattform als CI-Artefakt; Release-Gate fehlt noch |
 | Keine Zugangsdaten im Binary (bei automatischer Zertifikatsanforderung) | erfüllt, es gibt keine eingebauten Geheimnisse |
 
 ### Assurance Level 2
@@ -79,7 +79,7 @@ Empfehlung: zuerst Level 1, Level 2 später über ein KMS/HSM-Backend (PKCS#11) 
 
 1. Expression of Interest einreichen, um Fristen, Kosten und aktuelle Programmversion zu erfahren.
 2. ~~Backend für OS-Schlüsselspeicher ergänzen~~ (erledigt). Prüfen, ob für Level 2 ein nicht exportierbarer Schlüssel (Secure Enclave, TPM über Microsoft Platform Crypto Provider) nötig ist.
-3. SBOM (CycloneDX) und Release-Gate in der CI.
+3. ~~SBOM (CycloneDX)~~ (erledigt); Release-Gate in der CI ergänzen.
 4. Security-Architecture-Dokument nach Anhang C entwerfen.
 5. CA von der C2PA Trust List auswählen und Zertifikat beantragen.
 

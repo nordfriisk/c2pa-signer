@@ -68,6 +68,23 @@ Parent-Ingredient (Aktion `c2pa.opened`) in das neue übernommen.
   (PKCS#11/HSM, Cloud-KMS) lassen sich dort ergänzen.
 * Schlüssel und Zertifikate niemals einchecken (`.gitignore` schließt `certs/` und `*.pem` aus).
 
+## SBOM
+
+Die CI erzeugt bei jedem Lauf eine Software Bill of Materials im Format
+CycloneDX 1.6, getrennt für Linux, Windows und macOS (die Abhängigkeiten für den
+Schlüsselspeicher unterscheiden sich je Plattform). Sie liegt als Artefakt
+`sbom-<Plattform>` am jeweiligen Workflow-Lauf. Lokal:
+
+```bash
+python -m venv --without-pip sbom-env
+python -m pip --python sbom-env install .
+python -m pip install cyclonedx-bom
+cyclonedx-py environment --pyproject pyproject.toml --sv 1.6 --of JSON --validate -o sbom.cdx.json sbom-env
+```
+
+Hinweis: `c2pa-python` bringt die native Bibliothek `c2pa-rs` mit; sie erscheint
+in der SBOM als Teil des Pakets `c2pa-python`, nicht als eigene Komponente.
+
 ## Conformance
 
 Ziel ist die Aufnahme in die offizielle Liste konformer C2PA-Produkte.

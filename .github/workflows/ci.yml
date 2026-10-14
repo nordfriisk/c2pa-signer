@@ -34,3 +34,34 @@ jobs:
           python-version: "3.13"
       - run: python -m pip install pip-audit
       - run: pip-audit --strict .
+
+  sbom:
+    # Software Bill of Materials (CycloneDX 1.6) je Plattform, da die
+    # Abhängigkeiten des Schlüsselspeichers pro Betriebssystem verschieden sind.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Laufzeitumgebung ohne Werkzeuge aufbauen
+        run: |
+          python -m venv --without-pip sbom-env
+          python -m pip --python sbom-env install .
+      - name: SBOM erzeugen
+        run: |
+          python -m pip install "cyclonedx-bom>=7,<8"
+          cyclonedx-py environment --pyproject pyproject.toml --sv 1.6 --of JSON \
+            --output-reproducible --validate \
+            -o "sbom-${{ runner.os }}.cdx.json" sbom-env
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sbom-${{ runner.os }}
+          path: sbom-${{ runner.os }}.cdx.json

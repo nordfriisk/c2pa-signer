@@ -30,12 +30,31 @@ c2pa-signer sign ./bilder -r --cert certs/signer-chain.pem --key certs/signer-ke
 c2pa-signer verify ./signiert -r --trust-anchors certs/test-root-ca.pem
 ```
 
+## Schlüssel im Schlüsselspeicher des Betriebssystems
+
+Statt einer Schlüsseldatei kann der private Schlüssel im Schlüsselspeicher des
+Betriebssystems liegen: Windows-Anmeldeinformationsverwaltung, macOS-Schlüsselbund
+oder unter Linux Secret Service (GNOME Keyring, KWallet).
+
+```bash
+c2pa-keystore import certs/signer-key.pem          # einmalig ablegen (Name: default)
+c2pa-keystore show                                  # Algorithmus und Fingerabdruck
+c2pa-signer sign ./bilder -r --cert certs/signer-chain.pem --keystore default -o ./signiert
+c2pa-keystore delete                                # Eintrag entfernen
+```
+
+Mit `--name` lassen sich mehrere Schlüssel verwalten, z. B. für die Rotation.
+Danach wird die Schlüsseldatei nicht mehr gebraucht und sollte sicher gelöscht
+oder offline verwahrt werden. Unter Windows passen nur EC-Schlüssel (P-256/P-384)
+in die Anmeldeinformationsverwaltung.
+
 ## Befehle
 
 | Befehl | Zweck |
 |---|---|
 | `sign` | Dateien/Verzeichnisse signieren. `-o` Ziel (Verzeichnis oder bei einer Datei auch Dateiname), alternativ `--in-place`. `-r` rekursiv, `--tsa-url` Zeitstempeldienst, `--author`, `--title`. |
 | `verify` | Manifest lesen und Signatur prüfen, `--trust-anchors` für eigene Roots, `--json` für die volle Ausgabe. Exit-Code 1 bei ungültigen oder fehlenden Manifesten. |
+| `c2pa-keystore` | Schlüssel im Schlüsselspeicher ablegen (`import`), anzeigen (`show`), löschen (`delete`), Speicher anzeigen (`backend`). |
 | `testcert` | Test-PKI nach dem C2PA-Zertifikatsprofil erzeugen. **Nur für Entwicklung.** |
 
 Bereits signierte Bilder behalten ihre Historie: das alte Manifest wird als
@@ -44,8 +63,9 @@ Parent-Ingredient (Aktion `c2pa.opened`) in das neue übernommen.
 ## Sicherheit
 
 * Private Schlüssel müssen verschlüsselt sein; unverschlüsselte nur mit `--allow-unencrypted-key`.
+* Alternativ liegt der Schlüssel im Schlüsselspeicher des Betriebssystems (`--keystore`).
 * Signiert wird über einen Callback (`keys.py`); weitere Schlüssel-Backends
-  (OS-Keystore, PKCS#11/HSM, Cloud-KMS) lassen sich dort ergänzen.
+  (PKCS#11/HSM, Cloud-KMS) lassen sich dort ergänzen.
 * Schlüssel und Zertifikate niemals einchecken (`.gitignore` schließt `certs/` und `*.pem` aus).
 
 ## Conformance

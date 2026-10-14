@@ -20,6 +20,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e ".[dev]"
       - run: python -m pytest -q
+        env:
+          # Echten Schlüsselspeicher testen, wo der Runner einen hat
+          C2PA_REAL_KEYRING: ${{ matrix.os != 'ubuntu-latest' && '1' || '' }}
 
   sca:
     # Schwachstellen-Scan der Abhängigkeiten (Voraussetzung für Assurance Level 1)

@@ -13,6 +13,7 @@ authors = [{ name = "Stefan", email = "stefan@nordfriisk.com" }]
 dependencies = [
     "c2pa-python>=0.38,<0.39",
     "cryptography>=43",
+    "keyring>=25",
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,7 @@ dev = ["pytest>=8", "pillow>=10"]
 
 [project.scripts]
 c2pa-signer = "c2pa_signer.cli:main"
+c2pa-keystore = "c2pa_signer.keystore_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/c2pa_signer"]

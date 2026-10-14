@@ -10,7 +10,8 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .keys import PASSWORD_ENV, FileKeyBackend
+from .keys import PASSWORD_ENV, FileKeyBackend, KeystoreKeyBackend
+from .keystore import KeystoreError
 from .signing import (JPEG_SUFFIXES, SignOptions, iter_jpegs, make_signer,
                       read_manifest, sign_many)
 from .testcert import create_test_pki
@@ -46,7 +47,10 @@ def cmd_sign(args: argparse.Namespace) -> int:
     if not pairs:
         print("Keine JPG-Dateien gefunden.", file=sys.stderr)
         return 1
-    backend = FileKeyBackend(args.key, allow_unencrypted=args.allow_unencrypted_key)
+    if args.keystore:
+        backend = KeystoreKeyBackend(args.keystore)
+    else:
+        backend = FileKeyBackend(args.key, allow_unencrypted=args.allow_unencrypted_key)
     chain = args.cert.read_text()
     signer = make_signer(backend, chain, args.tsa_url)
     opts = SignOptions(author=args.author, title=args.title, tsa_url=args.tsa_url)
@@ -112,7 +116,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("inputs", nargs="+", type=Path, help="JPG-Dateien oder Verzeichnisse")
     s.add_argument("--cert", required=True, type=Path,
                    help="Zertifikatskette (PEM, Endzertifikat zuerst)")
-    s.add_argument("--key", required=True, type=Path, help="Privater Schlüssel (PEM)")
+    key = s.add_mutually_exclusive_group(required=True)
+    key.add_argument("--key", type=Path, help="Privater Schlüssel (PEM-Datei)")
+    key.add_argument("--keystore", metavar="NAME",
+                     help="Schlüssel aus dem Schlüsselspeicher des Betriebssystems "
+                          "(abgelegt mit c2pa-keystore import)")
     out = s.add_mutually_exclusive_group()
     out.add_argument("-o", "--output", type=Path,
                      help="Zielverzeichnis (oder Zieldatei bei genau einer Eingabedatei)")
@@ -148,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ValueError, OSError) as exc:
+    except (KeystoreError, ValueError, OSError) as exc:
         print(f"Fehler: {exc}", file=sys.stderr)
         return 2
 

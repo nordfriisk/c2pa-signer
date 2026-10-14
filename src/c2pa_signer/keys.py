@@ -6,6 +6,9 @@ und weitere Backends (Betriebssystem-Schlüsselspeicher, PKCS#11/HSM, Cloud-KMS)
 lassen sich ergänzen, ohne den Rest des Tools zu ändern. Das ist die
 Grundlage für die Sicherheitsanforderungen des C2PA-Conformance-Programms
 (siehe docs/conformance.md).
+
+Vorhandene Backends: FileKeyBackend (PEM-Datei) und KeystoreKeyBackend
+(Schlüsselspeicher des Betriebssystems, siehe keystore.py).
 """
 
 from __future__ import annotations
@@ -53,30 +56,12 @@ class KeyBackend(ABC):
         """Signiert die vom C2PA-SDK gelieferten Daten (COSE Sig_structure)."""
 
 
-class FileKeyBackend(KeyBackend):
-    """Privater Schlüssel als (verschlüsselte) PKCS#8-PEM-Datei.
+class _PrivateKeyBackend(KeyBackend):
+    """Signiert mit einem geladenen cryptography-Schlüsselobjekt."""
 
-    Das Passwort kommt aus der Umgebungsvariable C2PA_SIGNER_KEY_PASSWORD
-    oder wird interaktiv abgefragt. Unverschlüsselte Schlüssel werden nur
-    mit allow_unencrypted=True akzeptiert (Entwicklung/Tests).
-    """
-
-    def __init__(self, key_path: Path, password: bytes | None = None,
-                 allow_unencrypted: bool = False) -> None:
-        pem = Path(key_path).read_bytes()
-        encrypted = b"ENCRYPTED" in pem.split(b"\n", 1)[0]
-        if not encrypted and not allow_unencrypted:
-            raise ValueError(
-                f"{key_path}: Schlüssel ist nicht verschlüsselt. "
-                "Mit --allow-unencrypted-key nur für Tests zulassen."
-            )
-        if encrypted and password is None:
-            env = os.environ.get(PASSWORD_ENV)
-            password = env.encode() if env else getpass.getpass(
-                f"Passwort für {key_path}: ").encode()
-        self._key = serialization.load_pem_private_key(
-            pem, password=password if encrypted else None)
-        self.alg_name = _alg_for_key(self._key)
+    def __init__(self, key) -> None:
+        self._key = key
+        self.alg_name = _alg_for_key(key)
 
     def sign(self, data: bytes) -> bytes:
         key = self._key
@@ -95,6 +80,44 @@ class FileKeyBackend(KeyBackend):
                 hash_cls(),
             )
         return key.sign(data)
+
+
+class FileKeyBackend(_PrivateKeyBackend):
+    """Privater Schlüssel als (verschlüsselte) PKCS#8-PEM-Datei.
+
+    Das Passwort kommt aus der Umgebungsvariable C2PA_SIGNER_KEY_PASSWORD
+    oder wird interaktiv abgefragt. Unverschlüsselte Schlüssel werden nur
+    mit allow_unencrypted=True akzeptiert (Entwicklung/Tests).
+    """
+
+    def __init__(self, key_path: Path, password: bytes | None = None,
+                 allow_unencrypted: bool = False) -> None:
+        super().__init__(load_key_file(key_path, password, allow_unencrypted))
+
+
+class KeystoreKeyBackend(_PrivateKeyBackend):
+    """Privater Schlüssel aus dem Schlüsselspeicher des Betriebssystems."""
+
+    def __init__(self, name: str) -> None:
+        from .keystore import load_key
+        super().__init__(load_key(name))
+
+
+def load_key_file(key_path: Path, password: bytes | None = None,
+                  allow_unencrypted: bool = False):
+    pem = Path(key_path).read_bytes()
+    encrypted = b"ENCRYPTED" in pem.split(b"\n", 1)[0]
+    if not encrypted and not allow_unencrypted:
+        raise ValueError(
+            f"{key_path}: Schlüssel ist nicht verschlüsselt. "
+            "Mit --allow-unencrypted-key nur für Tests zulassen."
+        )
+    if encrypted and password is None:
+        env = os.environ.get(PASSWORD_ENV)
+        password = env.encode() if env else getpass.getpass(
+            f"Passwort für {key_path}: ").encode()
+    return serialization.load_pem_private_key(
+        pem, password=password if encrypted else None)
 
 
 def _alg_for_key(key) -> str:

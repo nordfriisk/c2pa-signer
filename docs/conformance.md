@@ -14,9 +14,12 @@ dem Rechner des Nutzers, kein Backend).
 3. **Funktionale Konformität** (Abschnitt 6.1.1 des Programmdokuments): Manifeste müssen
    spezifikationskonform sein, Assertions im aktiven Manifest stehen, und der Claim muss mit
    einem X.509-Zertifikat signiert sein, das auf die **C2PA Trust List** zurückführt.
-4. **Sicherheitsanforderungen**: Security-Architecture-Dokument nach Vorlage (Anhang C der
-   *Generator Product Security Requirements*) ausfüllen: Organisation, Produkt, Schlüsselerzeugung
-   und -speicherung, Schutz gegen Fehlkonfiguration und Missbrauch.
+4. **Sicherheitsanforderungen**: Security-Architecture-Dokument nach der Vorlage
+   *Generator Product Security Architecture Document Template* ausfüllen: Organisation, Produkt,
+   Schlüsselerzeugung und -speicherung, Schutz gegen Fehlkonfiguration und Missbrauch. Die
+   Vorlage ist nicht öffentlich verlinkt (die veröffentlichten *Security Requirements* v0.2 haben
+   nur die Anhänge A und B); man erhält sie im Antragsprozess nach der Expression of Interest
+   bzw. über conformance@c2pa.org.
 5. **Assurance Level**: C2PA legt ein maximales Level (1 oder 2) fest. Das Level steht später als
    eigene X.509-Erweiterung im Signierzertifikat.
 6. **Zertifikat** bei einer CA beziehen, die auf der C2PA Trust List steht und nach der
@@ -77,10 +80,10 @@ Empfehlung: zuerst Level 1, Level 2 später über ein KMS/HSM-Backend (PKCS#11) 
 
 ## Nächste Schritte
 
-1. Expression of Interest einreichen, um Fristen, Kosten und aktuelle Programmversion zu erfahren.
+1. [Expression of Interest](https://docs.google.com/forms/d/e/1FAIpQLScERZH5rKfoeSu3y6gGbkllkyeAhmF0G-kXS0eXpb2vR238Rg/viewform) einreichen, um Fristen, Kosten, aktuelle Programmversion und die Vorlage für das Security-Architecture-Dokument zu erhalten.
 2. ~~Backend für OS-Schlüsselspeicher ergänzen~~ (erledigt). Prüfen, ob für Level 2 ein nicht exportierbarer Schlüssel (Secure Enclave, TPM über Microsoft Platform Crypto Provider) nötig ist.
 3. ~~SBOM (CycloneDX)~~ (erledigt); Release-Gate in der CI ergänzen.
-4. Security-Architecture-Dokument nach Anhang C entwerfen.
+4. Vorlage für das Security-Architecture-Dokument anfordern (Expression of Interest bzw. conformance@c2pa.org) und ausfüllen.
 5. CA von der C2PA Trust List auswählen und Zertifikat beantragen.
 
 ## Quellen

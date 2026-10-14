@@ -12,3 +12,5 @@ certs/
 *.pem
 *.p12
 signed/
+sbom-env/
+*.cdx.json

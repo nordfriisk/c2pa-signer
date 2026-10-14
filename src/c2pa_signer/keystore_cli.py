@@ -7,6 +7,7 @@ damit er nicht als Datei auf der Platte liegen muss.
 from __future__ import annotations
 
 import argparse
+import getpass
 import hashlib
 import sys
 from pathlib import Path
@@ -14,7 +15,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 
 from . import __version__
-from .keys import _alg_for_key, load_key_file
+from .keys import alg_for_key
 from .keystore import (DEFAULT_NAME, SERVICE, KeystoreError, backend_name,
                        delete_key, load_key, store_key)
 
@@ -27,11 +28,15 @@ def _fingerprint(private_key) -> str:
 
 
 def cmd_import(args: argparse.Namespace) -> int:
-    key = load_key_file(args.keyfile, allow_unencrypted=True)
+    pem = args.keyfile.read_bytes()
+    password = None
+    if b"ENCRYPTED" in pem.split(b"\n", 1)[0]:
+        password = getpass.getpass(f"Passwort für {args.keyfile}: ").encode()
+    key = serialization.load_pem_private_key(pem, password=password)
     store_key(key, args.name, overwrite=args.overwrite)
     print(f"Schlüssel '{args.name}' abgelegt in {backend_name()} "
           f"(Dienst '{SERVICE}').")
-    print(f"Algorithmus: {_alg_for_key(key)}  SHA-256 (Public Key): {_fingerprint(key)}")
+    print(f"Algorithmus: {alg_for_key(key)}  SHA-256 (Public Key): {_fingerprint(key)}")
     print(f"Signieren mit: c2pa-signer sign ... --keystore {args.name}")
     print(f"Die Datei {args.keyfile} wird nicht mehr benötigt; "
           "bitte sicher löschen oder offline verwahren.")
@@ -42,7 +47,7 @@ def cmd_show(args: argparse.Namespace) -> int:
     key = load_key(args.name)
     print(f"Name:        {args.name}")
     print(f"Speicher:    {backend_name()}")
-    print(f"Algorithmus: {_alg_for_key(key)}")
+    print(f"Algorithmus: {alg_for_key(key)}")
     print(f"SHA-256 (Public Key): {_fingerprint(key)}")
     return 0
 

@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import argparse
-import getpass
 import json
-import os
 import sys
 from pathlib import Path
 
 from . import __version__
-from .keys import PASSWORD_ENV, FileKeyBackend, KeystoreKeyBackend
-from .keystore import KeystoreError
+from .keys import KeystoreKeyBackend
+from .keystore import DEFAULT_NAME, KeystoreError, store_key
 from .signing import (JPEG_SUFFIXES, SignOptions, iter_jpegs, make_signer,
                       read_manifest, sign_many)
 from .testcert import create_test_pki
@@ -47,10 +45,7 @@ def cmd_sign(args: argparse.Namespace) -> int:
     if not pairs:
         print("Keine JPG-Dateien gefunden.", file=sys.stderr)
         return 1
-    if args.keystore:
-        backend = KeystoreKeyBackend(args.keystore)
-    else:
-        backend = FileKeyBackend(args.key, allow_unencrypted=args.allow_unencrypted_key)
+    backend = KeystoreKeyBackend(args.keystore)
     chain = args.cert.read_text()
     signer = make_signer(backend, chain, args.tsa_url)
     opts = SignOptions(author=args.author, title=args.title, tsa_url=args.tsa_url)
@@ -94,14 +89,11 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 
 def cmd_testcert(args: argparse.Namespace) -> int:
-    password = None
-    if not args.no_password:
-        env = os.environ.get(PASSWORD_ENV)
-        password = (env or getpass.getpass("Passwort für den Testschlüssel: ")).encode()
-    pki = create_test_pki(args.out, password, args.days)
+    pki = create_test_pki(args.out, args.days)
+    store_key(pki.key, args.name, overwrite=args.overwrite)
     print(f"Root-CA (Trust Anchor zum Prüfen): {pki.root_cert}")
     print(f"Zertifikatskette:                  {pki.chain}")
-    print(f"Privater Schlüssel:                {pki.key}")
+    print(f"Privater Schlüssel:                Schlüsselspeicher, Name '{args.name}'")
     print("Achtung: nur für Entwicklung, nicht auf der C2PA-Trust-List.")
     return 0
 
@@ -116,11 +108,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("inputs", nargs="+", type=Path, help="JPG-Dateien oder Verzeichnisse")
     s.add_argument("--cert", required=True, type=Path,
                    help="Zertifikatskette (PEM, Endzertifikat zuerst)")
-    key = s.add_mutually_exclusive_group(required=True)
-    key.add_argument("--key", type=Path, help="Privater Schlüssel (PEM-Datei)")
-    key.add_argument("--keystore", metavar="NAME",
-                     help="Schlüssel aus dem Schlüsselspeicher des Betriebssystems "
-                          "(abgelegt mit c2pa-keystore import)")
+    s.add_argument("--keystore", metavar="NAME", default=DEFAULT_NAME,
+                   help="Name des Schlüssels im Schlüsselspeicher des Betriebssystems "
+                        f"(Standard: {DEFAULT_NAME})")
     out = s.add_mutually_exclusive_group()
     out.add_argument("-o", "--output", type=Path,
                      help="Zielverzeichnis (oder Zieldatei bei genau einer Eingabedatei)")
@@ -130,8 +120,6 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--tsa-url", help="RFC-3161-Zeitstempeldienst")
     s.add_argument("--author", help="Name des Urhebers")
     s.add_argument("--title", help="Titel (Standard: Dateiname)")
-    s.add_argument("--allow-unencrypted-key", action="store_true",
-                   help="Unverschlüsselten Schlüssel zulassen (nur Tests)")
     s.add_argument("-q", "--quiet", action="store_true")
     s.set_defaults(func=cmd_sign)
 
@@ -146,8 +134,10 @@ def build_parser() -> argparse.ArgumentParser:
     t = sub.add_parser("testcert", help="Test-PKI für die Entwicklung erzeugen")
     t.add_argument("--out", type=Path, default=Path("certs"))
     t.add_argument("--days", type=int, default=365)
-    t.add_argument("--no-password", action="store_true",
-                   help="Schlüssel unverschlüsselt speichern")
+    t.add_argument("--name", default=DEFAULT_NAME,
+                   help="Name des Schlüssels im Schlüsselspeicher")
+    t.add_argument("--overwrite", action="store_true",
+                   help="Vorhandenen Schlüssel gleichen Namens ersetzen")
     t.set_defaults(func=cmd_testcert)
     return p
 

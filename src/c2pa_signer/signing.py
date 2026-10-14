@@ -12,7 +12,7 @@ from typing import Iterable, Iterator
 import c2pa
 
 from . import CLAIM_GENERATOR_NAME, __version__
-from .keys import KeyBackend
+from .keys import KeystoreKeyBackend
 
 JPEG_SUFFIXES = {".jpg", ".jpeg"}
 
@@ -63,7 +63,7 @@ def build_manifest(source: Path, opts: SignOptions) -> dict:
     }
 
 
-def make_signer(backend: KeyBackend, chain_pem: str,
+def make_signer(backend: KeystoreKeyBackend, chain_pem: str,
                 tsa_url: str | None) -> c2pa.Signer:
     return c2pa.Signer.from_callback(backend.sign, backend.alg, chain_pem, tsa_url)
 

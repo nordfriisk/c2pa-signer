@@ -1,21 +1,9 @@
-from pathlib import Path
 
 import pytest
 from PIL import Image
 
 from c2pa_signer.cli import main
 from c2pa_signer.signing import read_manifest
-
-PASSWORD = "test-passwort"
-
-
-@pytest.fixture()
-def pki(tmp_path, monkeypatch):
-    monkeypatch.setenv("C2PA_SIGNER_KEY_PASSWORD", PASSWORD)
-    certs = tmp_path / "certs"
-    assert main(["testcert", "--out", str(certs)]) == 0
-    return certs
-
 
 @pytest.fixture()
 def images(tmp_path):
@@ -28,8 +16,7 @@ def images(tmp_path):
 
 
 def _sign(pki, *args):
-    return main(["sign", *args, "--cert", str(pki / "signer-chain.pem"),
-                 "--key", str(pki / "signer-key.pem"), "-q"])
+    return main(["sign", *args, "--cert", str(pki / "signer-chain.pem"), "-q"])
 
 
 def test_sign_directory_recursive(pki, images, tmp_path):
@@ -72,22 +59,19 @@ def test_tampered_file_fails_verify(pki, images, tmp_path):
     assert main(["verify", str(out / "a.jpg")]) == 1
 
 
-def test_untrusted_root_fails_with_trust_anchors(pki, images, tmp_path, monkeypatch):
+def test_untrusted_root_fails_with_trust_anchors(pki, images, tmp_path):
     other = tmp_path / "other"
-    main(["testcert", "--out", str(other)])
+    main(["testcert", "--out", str(other), "--name", "anderer"])
     out = tmp_path / "out"
     _sign(pki, str(images / "a.jpg"), "-o", str(out))
     assert main(["verify", str(out), "--trust-anchors",
                  str(other / "test-root-ca.pem")]) == 1
 
 
-def test_unencrypted_key_rejected_by_default(tmp_path, images):
-    certs = tmp_path / "plain"
-    main(["testcert", "--out", str(certs), "--no-password"])
-    args = ["sign", str(images / "a.jpg"), "-o", str(tmp_path / "o"),
-            "--cert", str(certs / "signer-chain.pem"), "--key", str(certs / "signer-key.pem")]
-    assert main(args) == 2
-    assert main(args + ["--allow-unencrypted-key"]) == 0
+def test_testcert_refuses_to_overwrite_key(pki, tmp_path):
+    assert main(["testcert", "--out", str(tmp_path / "neu")]) == 2
+    assert main(["testcert", "--out", str(tmp_path / "neu"), "--overwrite"]) == 0
+    assert not list((tmp_path / "neu").glob("*key*"))
 
 
 def test_output_required(pki, images):

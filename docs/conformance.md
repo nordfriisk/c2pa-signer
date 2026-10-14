@@ -62,6 +62,14 @@ Empfehlung: zuerst Level 1, Level 2 später über ein KMS/HSM-Backend (PKCS#11) 
 * **Zeitstempel**: nicht vorgeschrieben, aber empfohlen, damit Signaturen nach Ablauf des
   Zertifikats gültig bleiben. `--tsa-url` ist vorhanden; produktiv einen TSA von der C2PA TSA
   Trust List nutzen.
+* **Eintrag in der Liste**: Jeder Eintrag der Conforming Products List nennt Produkt, Rolle
+  (Generator), Assurance Level, die geprüfte Spezifikationsversion und die abgedeckten
+  Medientypen. Für uns also: Generator, Level 1, Medientyp `image/jpeg`. Die Spezifikations-
+  version ergibt sich aus dem gepinnten SDK; vor dem Antrag festhalten, welche Version es
+  umsetzt (aktuell gelistete Produkte nennen z. B. C2PA 2.2).
+* **Widerruf**: Validatoren prüfen per OCSP bzw. Sperrlisten, ob das Signierzertifikat
+  widerrufen ist. Ein widerrufenes oder zum Signierzeitpunkt abgelaufenes Zertifikat lässt die
+  Prüfung scheitern. Der Rotationsprozess im Security-Dokument muss das abdecken.
 * **Spezifikationskonformität** sichert die offizielle Bibliothek `c2pa-python`/`c2pa-rs`
   ab; Version ist gepinnt, Updates bewusst einspielen.
 * **Verteilung**: für Level 2 und vertrauenswürdige Releases sind signierte Binärpakete
@@ -81,3 +89,5 @@ Empfehlung: zuerst Level 1, Level 2 später über ein KMS/HSM-Backend (PKCS#11) 
 * [Trust lists](https://opensource.contentauthenticity.org/docs/conformance/trust-lists/)
 * [C2PA Generator Product Security Requirements v0.2](https://github.com/c2pa-org/conformance-public/blob/main/docs/v0.2/C2PA%20Generator%20Product%20Security%20Requirements.md)
 * [C2PA FAQ](https://c2pa.org/faqs/)
+* [Encypher-Glossar: Conformance Program](https://encypher.com/glossary#conformance-program) (Hinweis von Stefan)
+* [Encypher Conformance Explorer](https://encypher.com/c2pa-standard/conformance)

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "c2pa-signer"
+version = "0.1.0"
+description = "Kommandozeilentool zum Signieren von JPG-Bildern nach dem C2PA-Standard"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [{ name = "Stefan", email = "stefan@nordfriisk.com" }]
+dependencies = [
+    "c2pa-python>=0.38,<0.39",
+    "cryptography>=43",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pillow>=10"]
+
+[project.scripts]
+c2pa-signer = "c2pa_signer.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/c2pa_signer"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+# Schlüssel und Zertifikate nie einchecken
+certs/
+*.key
+*.pem
+*.p12
+signed/

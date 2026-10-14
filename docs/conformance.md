@@ -43,7 +43,7 @@ unter der offiziellen C2PA Trust List.
 
 | Anforderung | Umsetzung |
 |---|---|
-| Schlüssel verschlüsselt gespeichert | erledigt: PKCS#8 mit Passwort, unverschlüsselt nur per Schalter |
+| Schlüssel verschlüsselt gespeichert | erledigt: Schlüssel liegt nur im Schlüsselspeicher des Betriebssystems |
 | Schlüssel im Speicher nur zum Signieren entschlüsselt, oder Key-Management-Komponente (Linux Keyring, macOS Keychain) | umgesetzt: `c2pa-keystore` + `--keystore` (Windows Credential Manager, macOS Keychain, Linux Secret Service) |
 | Least Privilege, zeitlich begrenzter Zugriff auf den Schlüssel | offen: im Security-Dokument beschreiben, ggf. über OS-Keystore lösen |
 | Schlüsselrotation unterstützen | möglich: Schlüssel/Zertifikat sind Parameter; Prozess dokumentieren |

@@ -27,7 +27,7 @@ C2PA_CLAIM_SIGNING_OID = x509.ObjectIdentifier("1.3.6.1.4.1.62558.2.1")
 class TestPki:
     root_cert: Path
     chain: Path
-    key: Path
+    key: ec.EllipticCurvePrivateKey  # wird vom Aufrufer im Schlüsselspeicher abgelegt
 
 
 def _name(cn: str) -> x509.Name:
@@ -38,8 +38,7 @@ def _name(cn: str) -> x509.Name:
     ])
 
 
-def create_test_pki(out_dir: Path, password: bytes | None,
-                    days: int = 365) -> TestPki:
+def create_test_pki(out_dir: Path, days: int = 365) -> TestPki:
     out_dir.mkdir(parents=True, exist_ok=True)
     now = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=5)
 
@@ -87,17 +86,8 @@ def create_test_pki(out_dir: Path, password: bytes | None,
     )
 
     pem = serialization.Encoding.PEM
-    paths = TestPki(out_dir / "test-root-ca.pem", out_dir / "signer-chain.pem",
-                    out_dir / "signer-key.pem")
-    paths.root_cert.write_bytes(root.public_bytes(pem))
+    pki = TestPki(out_dir / "test-root-ca.pem", out_dir / "signer-chain.pem", leaf_key)
+    pki.root_cert.write_bytes(root.public_bytes(pem))
     # Kette ohne Root: Endzertifikat zuerst, Trust Anchor wird nicht mitgeliefert.
-    paths.chain.write_bytes(leaf.public_bytes(pem))
-    enc = (serialization.BestAvailableEncryption(password) if password
-           else serialization.NoEncryption())
-    paths.key.write_bytes(leaf_key.private_bytes(
-        pem, serialization.PrivateFormat.PKCS8, enc))
-    try:
-        paths.key.chmod(0o600)
-    except OSError:
-        pass
-    return paths
+    pki.chain.write_bytes(leaf.public_bytes(pem))
+    return pki

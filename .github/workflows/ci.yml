@@ -23,6 +23,8 @@ jobs:
         env:
           # Echten Schlüsselspeicher testen, wo der Runner einen hat
           C2PA_REAL_KEYRING: ${{ matrix.os != 'ubuntu-latest' && '1' || '' }}
+          # Zeitstempel-Test gegen einen TSA der C2PA-TSA-Trust-List (braucht Netz)
+          C2PA_TSA_TEST: ${{ matrix.os == 'ubuntu-latest' && '1' || '' }}
 
   sca:
     # Schwachstellen-Scan der Abhängigkeiten (Voraussetzung für Assurance Level 1)
